@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:mybatis-spring="http://mybatis.org/schema/mybatis-spring"
+	xsi:schemaLocation="http://mybatis.org/schema/mybatis-spring
+http://mybatis.org/schema/mybatis-spring-1.2.xsd http://www.springframework.org/schema/beans
+http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context
+http://www.springframework.org/schema/context/spring-context-4.0.xsd http://www.springframework.org/schema/tx
+http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
+
+
+
+	<!--扫描包-->
+	<context:component-scan base-package="com.yuanfeng">
+		<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"></context:exclude-filter>
+	</context:component-scan>
+
+	<!--加载配置文件-->
+
+	<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+	<!--忽略没有找到的资源文件-->
+	<property name="ignoreResourceNotFound" value="false"></property>
+	<!--配置数据库资源文件-->
+		<property name="locations">
+			<list>
+				<value>classpath:db.properties</value>
+			</list>
+		</property>
+	</bean>
+
+	<!--配置数据源-->
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
+		<property name="driverClass" value="${jdbc.driver}"></property>
+		<property name="jdbcUrl" value="${jdbc.url}"></property>
+		<property name="user" value="${jdbc.username}"></property>
+		<property name="password" value="${jdbc.password}"></property>
+	</bean>
+
+	<!--配置session工厂-->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"></property>
+		<!--加载mybatis主配置文件-->
+		<property name="configLocation" value="classpath:mybatis-config.xml"></property>
+		<!--加载Mapper的配置文件-->
+		<property name="mapperLocations" value="classpath:com/yuanfeng/mapper/*.xml"></property>
+		<!--给pojo层所有bean取别名-->
+		<property name="typeAliasesPackage" value="com.yuanfeng.pojo"></property>
+ 	</bean>
+
+	<!--Spring框架会自动为Mapper层自动生成代理，也就是说Mapper自动创建对象-->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.yuanfeng.mapper"></property>
+ 	</bean>
+	<!--配置事务管理器-->
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+
+	<!--开启注解支持-->
+	<tx:annotation-driven transaction-manager="transactionManager"></tx:annotation-driven>
+</beans>
